@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>For My Favorite Person</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@300;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --soft-pink: #ffc2d1;
+            --mid-pink: #ff8fab;
+            --hot-pink: #fb6f92;
+            --bg-pink: #fff0f3;
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            height: 100%; width: 100%;
+            background-color: var(--bg-pink);
+            font-family: 'Quicksand', sans-serif;
+            color: #444;
+            overflow: hidden;
+        }
+
+        /* --- LOGIN & HEARTS --- */
+        #login-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-pink);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 10000; transition: opacity 0.8s ease;
+        }
+        .login-box {
+            background: rgba(255, 255, 255, 0.95); padding: 40px; border-radius: 30px;
+            text-align: center; box-shadow: 0 10px 30px rgba(251, 111, 146, 0.2);
+            border: 2px solid var(--soft-pink); z-index: 10001;
+        }
+        .floating-heart {
+            position: absolute; color: var(--hot-pink);
+            cursor: pointer; user-select: none; z-index: 9999;
+            animation: moveUp 6s linear infinite;
+        }
+        @keyframes moveUp {
+            0% { transform: translateY(110vh) scale(1); opacity: 1; }
+            100% { transform: translateY(-10vh) scale(1.5); opacity: 0; }
+        }
+
+        /* --- NAVIGATION --- */
+        nav {
+            position: fixed; top: 0; width: 100%; background: white;
+            padding: 20px 0; display: flex; justify-content: center; gap: 30px;
+            z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        nav a { text-decoration: none; color: var(--hot-pink); font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 0.8rem; }
+
+        /* --- PAGE SYSTEM --- */
+        .page {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            padding: 80px 20px; box-sizing: border-box; text-align: center;
+        }
+        .active { display: flex; animation: fadeIn 0.8s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* --- 3D CAROUSEL (MANUAL FLIP) --- */
+        .stage {
+            width: 200px; height: 300px; 
+            perspective: 1500px; 
+            margin-top: 20px;
+        }
+        .carousel {
+            width: 100%; height: 100%; position: absolute;
+            transform-style: preserve-3d;
+            animation: spinMain 25s infinite linear;
+        }
+        /* Pause spin on hover so she can see the photo clearly */
+        .carousel:hover { animation-play-state: paused; }
+        
+        .card-container {
+            position: absolute; width: 200px; height: 280px;
+            left: 0; top: 0; transform-style: preserve-3d;
+        }
+
+        /* Circle Positions */
+        .card-container:nth-child(1) { transform: rotateY(0deg) translateZ(350px); }
+        .card-container:nth-child(2) { transform: rotateY(72deg) translateZ(350px); }
+        .card-container:nth-child(3) { transform: rotateY(144deg) translateZ(350px); }
+        .card-container:nth-child(4) { transform: rotateY(216deg) translateZ(350px); }
+        .card-container:nth-child(5) { transform: rotateY(288deg) translateZ(350px); }
+
+        .card-inner {
+            width: 100%; height: 100%; position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+        }
+
+        /* THE FLIP: Triggers on Hover or via JS click */
+        .card-container:hover .card-inner, .card-container.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        @keyframes spinMain {
+            from { transform: rotateY(0deg); }
+            to { transform: rotateY(360deg); }
+        }
+
+        .card-front, .card-back {
+            position: absolute; width: 100%; height: 100%;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            border-radius: 15px; background: white; border: 4px solid white;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        
+        .card-front { z-index: 2; transform: rotateY(0deg); }
+        .card-back { z-index: 1; transform: rotateY(180deg); }
+
+        .card-front img, .card-back img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; }
+
+        /* --- LETTER BOX --- */
+        .letter-box {
+            background: white; padding: 25px; border-radius: 25px;
+            max-width: 500px; max-height: 30vh; overflow-y: auto;
+            border: 1px solid var(--soft-pink); text-align: left;
+            white-space: pre-line; margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- 1. LOGIN -->
+    <div id="login-overlay">
+        <div class="login-box">
+            <h1 style="font-family: 'Dancing Script'; color: var(--hot-pink); font-size: 3rem;">HAPPY BIRTHDAY!</h1>
+            <p>Can you guess the password? 😉</p>
+            <input type="text" id="passInput" placeholder="Name Birthday?" style="padding: 12px; border-radius: 15px; border: 2px solid var(--soft-pink); text-align: center; outline: none;">
+            <br><br>
+            <button onclick="unlock()" style="background: var(--hot-pink); color: white; border: none; padding: 12px 25px; border-radius: 15px; cursor: pointer; font-weight: bold;">Unlock Your Gift!!</button>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav>
+        <a onclick="showPage('birthday')">Birthday</a>
+        <a onclick="showPage('photos')">Favorites</a>
+        <a onclick="showPage('letter')">My letter</a>
+    </nav>
+
+   <!-- BIRTHDAY PAGE -->
+    <div id="birthday" class="page active">
+        <h2 style="font-family: 'Dancing Script'; font-size: 3.5rem; color: var(--hot-pink);">Happy Birthday!</h2>
+        <div style="font-size: 60px; margin: 10px;">🌺</div>
+        <p>I built this little corner of the internet just for you.</p>
+        <button onclick="getCompliment()" style="background: white; border: 2px solid var(--hot-pink); color: var(--hot-pink); padding: 12px 25px; border-radius: 50px; cursor: pointer; font-weight: bold; margin-top: 10px;">Click me</button>
+        <p id="compliment-text" style="margin-top: 15px; font-weight: 700; color: var(--mid-pink); font-size: 1.1rem; min-height: 24px;"></p>
+    </div>
+
+    <!-- FAVORITES PAGE (3D CAROUSEL) -->
+    <div id="photos" class="page">
+        <h2 style="font-family: 'Dancing Script'; color: var(--hot-pink);">Our Favorites</h2>
+        <p style="font-size: 0.8rem; color: #888;">(Tap or hover a card to flip it over)</p>
+        <div class="stage">
+            <div class="carousel">
+                <!-- Card 1 -->
+                <div class="card-container" onclick="this.classList.toggle('flipped')">
+                    <div class="card-inner">
+                        <div class="card-front"><img src=https://cdn.discordapp.com/attachments/1428953360144269362/1502917248480968764/IMG_20260412_204247_1.jpg?ex=6a017442&is=6a0022c2&hm=70789905763c52a956a6b22957eb2343422b7f6d566c4710159b53c1a78df4e6& alt="Front 1"></div>
+                        <div class="card-back"><img src=https://cdn.discordapp.com/attachments/1428953360144269362/1502917247897833502/IMG_20260313_152139.jpg?ex=6a017442&is=6a0022c2&hm=f22342853700fd73d1ef5e33c17192a0a56808d6cefc912a94d2ace5251c0de4& alt="Back 1"></div>
+                    </div>
+                </div>
+                <!-- Card 2 -->
+                <div class="card-container" onclick="this.classList.toggle('flipped')">
+                    <div class="card-inner">
+                        <div class="card-front"><img src=https://cdn.discordapp.com/attachments/1428953360144269362/1502917246509650064/IMG_20251227_182306_1.jpg?ex=6a017442&is=6a0022c2&hm=41697c69170e9b6b41c12b6ed191e9c809c29301fb574589d3e0647b593be341& alt="Front 2"></div>
+                        <div class="card-back"><img src=https://cdn.discordapp.com/attachments/1428953360144269362/1502917245356081262/IMG_20260106_130937.jpg?ex=6a017442&is=6a0022c2&hm=b1ff530f49ca90f9abad927af4f86dc216a56649df27dbf26851e6d69a61e750& alt="Back 2"></div>
+                    </div>
+                </div>
+                <!-- Card 3 -->
+                <div class="card-container" onclick="this.classList.toggle('flipped')">
+                    <div class="card-inner">
+                        <div class="card-front"><img src=https://cdn.discordapp.com/attachments/1428953360144269362/1502917246958305303/IMG_20251211_184630_994.webp?ex=6a017442&is=6a0022c2&hm=65c4a5e1562a023a586e782e386d01112e00d815afdae224b26191ab5c5981cc& alt="Front 3"></div>
+                        <div class="card-back"><img src=https://cdn.discordapp.com/attachments/1428953360144269362/1502917246010265660/IMG_20260113_175000.jpg?ex=6a017442&is=6a0022c2&hm=9449e438894ab8e592f39561b0c04019ba296b0346238bdaea0f0aa3056b40d5& alt="Back 3"></div>
+                    </div>
+                </div>
+                <!-- Card 4 -->
+                <div class="card-container" onclick="this.classList.toggle('flipped')">
+                    <div class="card-inner">
+                        <div class="card-front"><img src=https://cdn.discordapp.com/attachments/1428953360144269362/1502917247318884523/Messenger_creation_D85179DE-3936-4C64-BE4E-8C9DF37ECB2C.jpg?ex=6a017442&is=6a0022c2&hm=bad1d6d25863ba99b1640131cb3a16b82f1fe83d023b37393cf1ed4b4b6bcdf6& alt="Front 4"></div>
+                        <div class="card-back"><img src=https://cdn.discordapp.com/attachments/1428953360144269362/1502917244873867264/IMG_20260127_151649_859.jpg?ex=6a017442&is=6a0022c2&hm=bd50998c48be91c4a391513a4bac2dd34dcd10fc1bc293d352a0e3afa47ee152& alt="Back 4"></div>
+                    </div>
+                </div>
+               <!-- Card 5 -->
+                <div class="card-container" onclick="this.classList.toggle('flipped')">
+                    <div class="card-inner">
+                        <div class="card-front"><img src=https://cdn.discordapp.com/attachments/1428953360144269362/1502917244093730876/IMG_20260421_160851.jpg?ex=6a017441&is=6a0022c1&hm=dca708f786cd601ab39e521d5f6873eb904dc394f5b32edec75d52176f941599& alt="Front 5"></div>
+                        <div class="card-back"><img src=https://cdn.discordapp.com/attachments/1428953360144269362/1502917244521283604/IMG_20260218_103437.jpg?ex=6a017441&is=6a0022c1&hm=555d0c34c0b3c87fa6993350e4ce2bb187420927bbf52a50dbe1ebd5eec8c567& alt="Back 5"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LETTER PAGE -->
+    <div id="letter" class="page">
+        <h2 style="font-family: 'Dancing Script'; color: var(--hot-pink);">For my beatiful baby</h2>
+        <div class="letter-box">
+            Dear Bujingjing, 
+
+Happy birthday my little sweet baby girl. 
+
+I wanted to write something incredibly profound or deep, but I'm not really used to making letters. So I'll just do what I know I will not regret. First, I wanna say how thankful I am to you. Thank you for showing me love and kindness, for staying with me no matter what and how hard it is, for teaching me how to love and take care of myself more, for being my motivation to do better everyday, and for being my fuel to strive better on the things I want to do. 
+
+I love the life we are building together, even in the quietest moments like when we just cuddle wherever or watch movie their. I can't wait to see all the amazing things you'll do this year, and I'll be right here cheering you on. I hope we both strive on whatever we want to build. 
+
+You give me so much of yourself to me, and I want to promise you that I'll always do my best to make you feel just as loved, supported, and safe. I want to be your biggest cheerleader, just like you've been mine. I promise to stay by your side and to help you whenever you need me.
+
+I love you so much my baby girl. Happy Birthday again. enjoy your day:)
+        </div>
+        <iframe data-testid="embed-iframe" style="border-radius:12px" src="https://open.spotify.com/embed/track/2ez7CzKaXcGmIOP6NAZvzx?utm_source=generator" width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+        </div>
+    </div>
+
+    <script>
+        // Hearts Logic
+        function createHeart() {
+            const heart = document.createElement('div');
+            heart.classList.add('floating-heart');
+            heart.innerHTML = '❤️';
+            heart.style.left = Math.random() * 100 + 'vw';
+            heart.style.fontSize = (Math.random() * 20 + 20) + 'px';
+            heart.style.animationDuration = (Math.random() * 3 + 4) + 's';
+            heart.onclick = function() {
+                this.innerHTML = '💖✨';
+                setTimeout(() => this.remove(), 500);
+            };
+            document.getElementById('login-overlay').appendChild(heart);
+            setTimeout(() => heart.remove(), 6000);
+        }
+        setInterval(createHeart, 400);
+
+        // Unlock Logic
+        function unlock() {
+            const input = document.getElementById('passInput').value.toLowerCase();
+            const correct = "bujingjing6927"; // <--- CHANGE THIS TO THE PASSWORD
+            if(input === correct) {
+                document.getElementById('login-overlay').style.opacity = "0";
+                setTimeout(() => {
+                    document.getElementById('login-overlay').style.display = "none";
+                }, 800);
+            } else { alert("Try again, baby! 😉 maybe its a name and birthday?"); }
+        }
+
+        // Navigation Logic
+        function showPage(id) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        // Compliments
+        const compliments = ["I love your EYES.", "I'm the luckiest guy.", "You're my everything.", "Happy Birthday, Baby!" , "You're so Cute" , "I love you" , "You're the most beautiful girl in the world"];
+        function getCompliment() {
+            const random = compliments[Math.floor(Math.random() * compliments.length)];
+            document.getElementById('compliment-text').innerText = random;
+        }
+    </script>
+</body>
+</html>
